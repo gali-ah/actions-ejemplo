@@ -27,17 +27,17 @@ class Person:
         Returns:
             str: Nombre completo capitalizado
         """
-        return f"{self.first_name.capitalize()} {self.last_name.capitalize()}"
+        return f"{self.first_name.title()} {self.last_name.title()}"
 
 
 # Ejemplo de uso (opcional, para pruebas locales)
 if __name__ == "__main__":
     # Crear personas de ejemplo
     p1 = Person("galilea", "alonso")
-    p2 = Person("FRANK", "CASTILLO")
-    p3 = Person("aNtOnIo", "pErEz")
+    p2 = Person("FRANCISCO", "CASTILLO")
+    p3 = Person("mOnIcA", "lOpEz")
     
     # Imprimir usando __str__ automáticamente
     print(p1)  # Galilea Alonso
-    print(p2)  # Frank Castillo
-    print(p3)  # Antonio Perez
+    print(p2)  # Francisco Castillo
+    print(p3)  # Monica Lopez

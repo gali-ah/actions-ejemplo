@@ -17,6 +17,11 @@ jobs:
         with:
           python-version: '3.11'
       
+      - name: Instalar dependencias
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest
+      
       - name: Obtener información del commit
         id: commit_info
         run: |
@@ -42,13 +47,30 @@ jobs:
         id: run_tests
         continue-on-error: true
         run: |
+          set +e  # Desactivar exit-on-error temporalmente
           echo "🧪 Ejecutando tests..."
           python -m pytest tests/test_person.py -v --tb=short > test_output.txt 2>&1
           TEST_EXIT_CODE=$?
+          set -e  # Reactivar exit-on-error
           
-          # Contar tests pasados y fallidos
-          PASSED=$(grep -o "passed" test_output.txt | wc -l || echo "0")
-          FAILED=$(grep -o "failed" test_output.txt | wc -l || echo "0")
+          # Extraer números del resumen final de pytest
+          # Busca líneas como: "6 failed, 2 passed in 0.03s" o "8 passed in 0.03s"
+          SUMMARY_LINE=$(grep -E "^=+ .* in [0-9]+\.[0-9]+s =+$" test_output.txt | tail -1)
+          
+          # Extraer tests pasados
+          if echo "$SUMMARY_LINE" | grep -q "passed"; then
+            PASSED=$(echo "$SUMMARY_LINE" | grep -oP '\d+(?= passed)' || echo "0")
+          else
+            PASSED="0"
+          fi
+          
+          # Extraer tests fallidos
+          if echo "$SUMMARY_LINE" | grep -q "failed"; then
+            FAILED=$(echo "$SUMMARY_LINE" | grep -oP '\d+(?= failed)' || echo "0")
+          else
+            FAILED="0"
+          fi
+          
           TOTAL=$((PASSED + FAILED))
           
           echo "test_exit_code=$TEST_EXIT_CODE" >> $GITHUB_OUTPUT
@@ -64,7 +86,7 @@ jobs:
             echo "❌ Tests fallidos: $FAILED/$TOTAL"
           fi
           
-          exit $TEST_EXIT_CODE
+          # NO hacemos exit aquí, dejamos que continue-on-error maneje el flujo
       
       - name: Generar reporte de errores (si falló)
         if: steps.run_tests.outputs.status == 'failed'
